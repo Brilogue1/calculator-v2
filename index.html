@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timeshare Calculator</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- PAGE 1: CALCULATOR (prints as Page 1) -->
+  <section id="calculatorPage" class="print-page">
+    <header class="page-header">
+      <h1>Timeshare Calculator</h1>
+      <p class="muted">Fill out values. Tap <strong>Next</strong> to generate the Drop Sheet. Printing includes both pages.</p>
+    </header>
+
+    <div class="card">
+      <h2>Inputs</h2>
+
+      <div class="grid">
+        <label class="field">
+          <span>Annual Maintenance Fee</span>
+          <input id="annualMaintFee" type="number" inputmode="decimal" placeholder="0.00" />
+        </label>
+
+        <label class="field">
+          <span>Maintenance Fee Inflation</span>
+          <input id="maintInflation" type="number" inputmode="decimal" placeholder="0.00" />
+        </label>
+
+        <label class="field">
+          <span>Mortgage</span>
+          <input id="mortgage" type="number" inputmode="decimal" placeholder="0.00" />
+        </label>
+
+        <label class="field">
+          <span>Cost of Liquidation</span>
+          <input id="costOfLiquidation" type="number" inputmode="decimal" placeholder="0.00" />
+        </label>
+
+        <label class="field">
+          <span>Transfer Fees</span>
+          <input id="transferFees" type="number" inputmode="decimal" value="1800" />
+        </label>
+
+        <label class="field">
+          <span>Processing Fee</span>
+          <input id="processingFee" type="number" inputmode="decimal" value="449" />
+        </label>
+
+        <label class="field">
+          <span>EBOC</span>
+          <input id="eboc" type="number" inputmode="decimal" placeholder="0.00" />
+        </label>
+
+        <label class="field">
+          <span>Maintenance Fee Credit</span>
+          <input id="maintCredit" type="number" inputmode="decimal" placeholder="0.00" />
+          <small class="hint">Optional. If blank, MRA uses 0 credit.</small>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Calculated (live)</h2>
+      <div class="results">
+        <div class="result">
+          <span>Gross Liquidation Price</span>
+          <strong id="outGross">$0.00</strong>
+        </div>
+        <div class="result">
+          <span>Total Cost of Ownership</span>
+          <strong id="outTCO">$0.00</strong>
+        </div>
+        <div class="result">
+          <span>MRA</span>
+          <strong id="outMRA">$0.00</strong>
+        </div>
+      </div>
+      <p class="muted tiny">Calculator math updates as you type. Drop Sheet edits (next page) are cosmetic-only and won’t recalc.</p>
+    </div>
+
+    <footer class="page-actions no-print">
+      <button class="btn" id="btnNext">Next: Drop Sheet</button>
+      <button class="btn secondary" id="btnPrintAllTop">Print / Save PDF (Both Pages)</button>
+    </footer>
+  </section>
+
+  <!-- PAGE 2: DROP SHEET (prints as Page 2) -->
+  <section id="dropSheetPage" class="print-page">
+    <header class="page-header">
+      <h1>Drop Sheet</h1>
+      <p class="muted">You can edit fields here before printing. These edits do not recalculate the calculator.</p>
+    </header>
+
+    <div class="card">
+      <h2>Summary</h2>
+
+      <div class="grid">
+        <label class="field">
+          <span>Annual Maintenance Fee</span>
+          <input id="dsAnnualMaintFee" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Maintenance Fee Inflation</span>
+          <input id="dsMaintInflation" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Mortgage</span>
+          <input id="dsMortgage" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Total Cost of Ownership</span>
+          <input id="dsTCO" type="number" inputmode="decimal" />
+          <small class="hint">Editable override (cosmetic).</small>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pricing</h2>
+
+      <div class="grid">
+        <label class="field">
+          <span>Cost of Liquidation</span>
+          <input id="dsCostOfLiquidation" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Transfer Fees</span>
+          <input id="dsTransferFees" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Processing Fee</span>
+          <input id="dsProcessingFee" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Gross Liquidation Price</span>
+          <input id="dsGross" type="number" inputmode="decimal" />
+          <small class="hint">Editable override (cosmetic).</small>
+        </label>
+
+        <label class="field">
+          <span>EBOC</span>
+          <input id="dsEBOC" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>Maintenance Fee Credit</span>
+          <input id="dsMaintCredit" type="number" inputmode="decimal" />
+        </label>
+
+        <label class="field">
+          <span>MRA</span>
+          <input id="dsMRA" type="number" inputmode="decimal" />
+          <small class="hint">Editable override (cosmetic).</small>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Notes</h2>
+      <textarea id="dsNotes" rows="5" placeholder="Optional notes..."></textarea>
+    </div>
+
+    <footer class="page-actions no-print">
+      <button class="btn secondary" id="btnBack">Back to Calculator</button>
+      <button class="btn" id="btnPrintAllBottom">Print / Save PDF (Both Pages)</button>
+    </footer>
+  </section>
+
+  <script src="./script.js"></script>
+</body>
+</html>
