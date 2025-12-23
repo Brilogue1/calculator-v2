@@ -104,13 +104,18 @@ function TimeshareCalculator() {
     ],
     
     // Drop Sheet Defaults (editable)
-    transferFees: 3500,
-    processingFee: 595,
+    transferFees: 1800,
+    processingFee: 449,
     mra: 12500,
   });
   
   const [dropSheetData, setDropSheetData] = useState([]);
   const [editingDropSheet, setEditingDropSheet] = useState(null);
+
+  // Format number with commas
+  const formatCurrency = (num) => {
+    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
 
   // Calculate 30-year projections for a resort
   const calculateProjections = (maintenanceFee, inflationRate) => {
@@ -148,8 +153,8 @@ function TimeshareCalculator() {
         // Calculate Gross Liquidation Price = 20-year cumulative + transfer + processing
         const grossLiquidation = year20Cumulative + formData.transferFees + formData.processingFee;
         
-        // Calculate EBOC = MRA - Gross Liquidation
-        const eboc = formData.mra - grossLiquidation;
+        // Calculate EBOC = Gross Liquidation - MRA
+        const eboc = grossLiquidation - formData.mra;
         
         return {
           resortIndex: index,
@@ -757,7 +762,7 @@ function TimeshareCalculator() {
                     Total Annual Maintenance / Taxes
                   </div>
                   <div style={{ fontSize: '28px', fontWeight: '800' }}>
-                    ${totalAnnualMaint.toFixed(2)}
+                    ${formatCurrency(totalAnnualMaint)}
                   </div>
                 </div>
                 
@@ -838,7 +843,7 @@ function TimeshareCalculator() {
                       className="input-field"
                       value={formData.transferFees}
                       onChange={(e) => handleInputChange('transferFees', parseFloat(e.target.value) || 0)}
-                      placeholder="3500"
+                      placeholder="1800"
                     />
                   </div>
                   <div>
@@ -848,7 +853,7 @@ function TimeshareCalculator() {
                       className="input-field"
                       value={formData.processingFee}
                       onChange={(e) => handleInputChange('processingFee', parseFloat(e.target.value) || 0)}
-                      placeholder="595"
+                      placeholder="449"
                     />
                   </div>
                   <div>
@@ -958,15 +963,15 @@ function TimeshareCalculator() {
                       }}>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>Annual Maintenance / Taxes Fee:</strong>
-                          <span>${sheet.currentMaintFee.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.currentMaintFee)}</span>
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>30-Year Inflation Total:</strong>
-                          <span>${sheet.maintFeeInflation.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.maintFeeInflation)}</span>
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>Mortgage Payoff:</strong>
-                          <span>${sheet.mortgage.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.mortgage)}</span>
                         </div>
                         <div className="cost-total" style={{ 
                           paddingTop: '8px', 
@@ -977,7 +982,7 @@ function TimeshareCalculator() {
                           justifyContent: 'space-between'
                         }}>
                           <span>Total Cost of Ownership:</span>
-                          <span>${sheet.totalCost.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.totalCost)}</span>
                         </div>
                       </div>
                     </div>
@@ -1042,7 +1047,7 @@ function TimeshareCalculator() {
                         
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>Cost of Liquidation:</strong>
-                          <span>${sheet.year20Cumulative.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.year20Cumulative)}</span>
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>Transfer Fees:</strong>
@@ -1060,7 +1065,7 @@ function TimeshareCalculator() {
                               }}
                             />
                           ) : (
-                            <span>${sheet.transferFees.toFixed(2)}</span>
+                            <span>${formatCurrency(sheet.transferFees)}</span>
                           )}
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1079,7 +1084,7 @@ function TimeshareCalculator() {
                               }}
                             />
                           ) : (
-                            <span>${sheet.processingFee.toFixed(2)}</span>
+                            <span>${formatCurrency(sheet.processingFee)}</span>
                           )}
                         </div>
                         <div className="cost-row" style={{ 
@@ -1090,11 +1095,11 @@ function TimeshareCalculator() {
                           borderBottom: '1px solid #999'
                         }}>
                           <strong>Gross Liquidation Price:</strong>
-                          <span>${sheet.grossLiquidation.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.grossLiquidation)}</span>
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>EBOC:</strong>
-                          <span>${sheet.eboc.toFixed(2)}</span>
+                          <span>${formatCurrency(sheet.eboc)}</span>
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>MRA:</strong>
@@ -1112,7 +1117,7 @@ function TimeshareCalculator() {
                               }}
                             />
                           ) : (
-                            <span>${sheet.mra.toFixed(2)}</span>
+                            <span>${formatCurrency(sheet.mra)}</span>
                           )}
                         </div>
                       </div>
@@ -1142,10 +1147,10 @@ function TimeshareCalculator() {
                         <tr key={year.year} style={{ borderBottom: '1px solid #ddd' }}>
                           <td style={{ padding: '6px' }}>Year {year.year}</td>
                           <td style={{ padding: '6px', textAlign: 'right' }}>
-                            ${year.annualCost.toFixed(2)}
+                            ${formatCurrency(year.annualCost)}
                           </td>
                           <td style={{ padding: '6px', textAlign: 'right', fontWeight: 'bold' }}>
-                            ${year.cumulative.toFixed(2)}
+                            ${formatCurrency(year.cumulative)}
                           </td>
                         </tr>
                       ))}
