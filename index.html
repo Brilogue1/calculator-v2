@@ -7,6 +7,8 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body style="margin:0;padding:0;">
   <div id="root"></div>
@@ -228,16 +230,58 @@ function TimeshareCalculator() {
     }, 100);
   };
 
-  const downloadDropSheet = (sheetIndex) => {
-    // Use browser's native print which allows "Save as PDF"
-    window.print();
+  const downloadDropSheet = async (sheetIndex) => {
+    try {
+      const element = document.getElementById(`drop-sheet-${sheetIndex}`);
+      const resortName = dropSheetData[sheetIndex].resortName.replace(/\s+/g, '-');
+      
+      // Use html2canvas and jsPDF
+      if (window.html2canvas && window.jspdf) {
+        const { jsPDF } = window.jspdf;
+        
+        // Get all print-page elements within the drop sheet
+        const pages = element.querySelectorAll('.print-page');
+        const pdf = new jsPDF('p', 'pt', 'letter');
+        
+        for (let i = 0; i < pages.length; i++) {
+          const canvas = await window.html2canvas(pages[i], {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
+          
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          const imgWidth = 612; // Letter width in points
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+        }
+        
+        pdf.save(`${resortName}-Drop-Sheet.pdf`);
+      } else {
+        alert('PDF libraries not loaded. Please use the Print button and choose "Save as PDF".');
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF. Please use the Print button and choose "Save as PDF".');
+    }
   };
 
   const activeResorts = formData.resorts.filter(r => r.active);
   const totalAnnualMaint = activeResorts.reduce((sum, r) => sum + (parseFloat(r.maintenanceFee) || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom right, #4f46e5, #7c3aed, #ec4899)',
+      margin: 0,
+      padding: 0
+    }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
@@ -668,14 +712,20 @@ function TimeshareCalculator() {
       `}</style>
 
       {/* Header */}
-      <div className="no-print" style={{ padding: '24px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }}>
+      <div className="no-print" style={{ 
+        padding: '24px 0', 
+        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+        background: 'rgba(0, 0, 0, 0.2)',
+        backdropFilter: 'blur(10px)'
+      }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: '800', 
             color: 'white', 
             marginBottom: '20px',
-            letterSpacing: '-0.5px'
+            letterSpacing: '-0.5px',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
           }}>
             Timeshare Calculator
           </h1>
@@ -1218,34 +1268,46 @@ function TimeshareCalculator() {
                 {/* End PDF container */}
 
                 {/* Print and Download Buttons */}
-                <div className="no-print" style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => printDropSheet(idx)}
-                    className="btn-primary"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
-                  >
-                    <Printer size={20} />
-                    Print {sheet.resortName}
-                  </button>
-                  <button
-                    onClick={() => downloadDropSheet(idx)}
-                    className="btn-secondary"
-                    style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      gap: '10px',
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      border: 'none',
-                      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)'
-                    }}
-                  >
-                    <Download size={20} />
-                    Download PDF
-                  </button>
-                </div>
-                <div className="no-print" style={{ textAlign: 'center', marginTop: '-30px', marginBottom: '40px', fontSize: '13px', color: '#6c757d' }}>
-                  💡 Tip: In the print dialog, choose "Save as PDF" to download
+                <div className="no-print" style={{ marginBottom: '40px', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    <button
+                      onClick={() => printDropSheet(idx)}
+                      className="btn-primary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <Printer size={20} />
+                      Print {sheet.resortName}
+                    </button>
+                    <button
+                      onClick={() => downloadDropSheet(idx)}
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '10px',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: 'white',
+                        padding: '16px 32px',
+                        borderRadius: '16px',
+                        border: 'none',
+                        fontWeight: '700',
+                        fontSize: '15px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.4)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.3)';
+                      }}
+                    >
+                      <Download size={20} />
+                      Download PDF
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
