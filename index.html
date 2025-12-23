@@ -7,7 +7,6 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body style="margin:0;padding:0;">
   <div id="root"></div>
@@ -230,60 +229,8 @@ function TimeshareCalculator() {
   };
 
   const downloadDropSheet = (sheetIndex) => {
-    // Get the drop sheet content
-    const element = document.getElementById(`drop-sheet-${sheetIndex}`);
-    
-    if (!element) {
-      alert('Content not found. Please try again.');
-      return;
-    }
-    
-    // Configure PDF options for multi-page content
-    const opt = {
-      margin: [0.4, 0.3, 0.4, 0.3],
-      filename: `${dropSheetData[sheetIndex].resortName.replace(/\s+/g, '-')}-Drop-Sheet.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { 
-        scale: 2,
-        useCORS: true,
-        letterRendering: true,
-        logging: false
-      },
-      jsPDF: { 
-        unit: 'in', 
-        format: 'letter', 
-        orientation: 'portrait',
-        compress: true
-      },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-    
-    // Generate and download PDF
-    if (window.html2pdf) {
-      // Clone element and ensure it's visible for capture
-      const clone = element.cloneNode(true);
-      clone.style.display = 'block';
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px';
-      clone.style.background = 'white';
-      clone.style.padding = '20px';
-      document.body.appendChild(clone);
-      
-      window.html2pdf()
-        .set(opt)
-        .from(clone)
-        .save()
-        .then(() => {
-          document.body.removeChild(clone);
-        })
-        .catch((err) => {
-          console.error('PDF generation failed:', err);
-          document.body.removeChild(clone);
-          alert('PDF generation failed. Please use the Print button instead.');
-        });
-    } else {
-      alert('PDF library not loaded. Please use the Print button instead.');
-    }
+    // Use browser's native print which allows "Save as PDF"
+    window.print();
   };
 
   const activeResorts = formData.resorts.filter(r => r.active);
@@ -1278,7 +1225,7 @@ function TimeshareCalculator() {
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
                   >
                     <Printer size={20} />
-                    Print for {sheet.resortName}
+                    Print {sheet.resortName}
                   </button>
                   <button
                     onClick={() => downloadDropSheet(idx)}
@@ -1294,8 +1241,11 @@ function TimeshareCalculator() {
                     }}
                   >
                     <Download size={20} />
-                    Save as PDF
+                    Download PDF
                   </button>
+                </div>
+                <div className="no-print" style={{ textAlign: 'center', marginTop: '-30px', marginBottom: '40px', fontSize: '13px', color: '#6c757d' }}>
+                  💡 Tip: In the print dialog, choose "Save as PDF" to download
                 </div>
               </div>
             ))}
