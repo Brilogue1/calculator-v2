@@ -233,20 +233,56 @@ function TimeshareCalculator() {
     // Get the drop sheet content
     const element = document.getElementById(`drop-sheet-${sheetIndex}`);
     
-    // Configure PDF options
+    if (!element) {
+      alert('Content not found. Please try again.');
+      return;
+    }
+    
+    // Configure PDF options for multi-page content
     const opt = {
-      margin: 0.3,
-      filename: `${dropSheetData[sheetIndex].resortName}-Drop-Sheet.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      margin: [0.4, 0.3, 0.4, 0.3],
+      filename: `${dropSheetData[sheetIndex].resortName.replace(/\s+/g, '-')}-Drop-Sheet.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        logging: false
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
     
     // Generate and download PDF
     if (window.html2pdf) {
-      window.html2pdf().set(opt).from(element).save();
+      // Clone element and ensure it's visible for capture
+      const clone = element.cloneNode(true);
+      clone.style.display = 'block';
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.background = 'white';
+      clone.style.padding = '20px';
+      document.body.appendChild(clone);
+      
+      window.html2pdf()
+        .set(opt)
+        .from(clone)
+        .save()
+        .then(() => {
+          document.body.removeChild(clone);
+        })
+        .catch((err) => {
+          console.error('PDF generation failed:', err);
+          document.body.removeChild(clone);
+          alert('PDF generation failed. Please use the Print button instead.');
+        });
     } else {
-      alert('PDF library not loaded. Please try the Print button instead.');
+      alert('PDF library not loaded. Please use the Print button instead.');
     }
   };
 
