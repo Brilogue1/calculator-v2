@@ -106,7 +106,7 @@ function TimeshareCalculator() {
     // Drop Sheet Defaults (editable)
     transferFees: 3500,
     processingFee: 595,
-    eboc: 3000,
+    mra: 12500,
   });
   
   const [dropSheetData, setDropSheetData] = useState([]);
@@ -142,6 +142,15 @@ function TimeshareCalculator() {
       .map((resort, index) => {
         const projections = calculateProjections(resort.maintenanceFee, resort.inflationRate);
         
+        // Get 20-year cumulative cost (year 20 is at index 19)
+        const year20Cumulative = projections.years[19].cumulative;
+        
+        // Calculate Gross Liquidation Price = 20-year cumulative + transfer + processing
+        const grossLiquidation = year20Cumulative + formData.transferFees + formData.processingFee;
+        
+        // Calculate EBOC = MRA - Gross Liquidation
+        const eboc = formData.mra - grossLiquidation;
+        
         return {
           resortIndex: index,
           resortName: resort.name,
@@ -151,13 +160,14 @@ function TimeshareCalculator() {
           inflationRate: resort.inflationRate,
           currentMaintFee: resort.maintenanceFee,
           maintFeeInflation: projections.totalInflation,
+          year20Cumulative: year20Cumulative,
           mortgage: formData.mortgage,
           totalCost: resort.maintenanceFee + projections.totalInflation + formData.mortgage,
           transferFees: formData.transferFees,
           processingFee: formData.processingFee,
-          grossLiquidation: formData.transferFees + formData.processingFee,
-          eboc: formData.eboc,
-          mra: formData.transferFees + formData.processingFee - formData.eboc,
+          mra: formData.mra,
+          grossLiquidation: grossLiquidation,
+          eboc: eboc,
           projections: projections.years
         };
       });
@@ -187,9 +197,11 @@ function TimeshareCalculator() {
         const updated = { ...sheet, [field]: parseFloat(value) || 0 };
         
         // Recalculate dependent values
-        if (['transferFees', 'processingFee', 'eboc'].includes(field)) {
-          updated.grossLiquidation = updated.transferFees + updated.processingFee;
-          updated.mra = updated.transferFees + updated.processingFee - updated.eboc;
+        if (['transferFees', 'processingFee', 'mra'].includes(field)) {
+          // Gross Liquidation = 20-year cumulative + transfer fees + processing fee
+          updated.grossLiquidation = updated.year20Cumulative + updated.transferFees + updated.processingFee;
+          // EBOC = MRA - Gross Liquidation
+          updated.eboc = updated.mra - updated.grossLiquidation;
         }
         
         return updated;
@@ -840,13 +852,13 @@ function TimeshareCalculator() {
                     />
                   </div>
                   <div>
-                    <label className="label">EBOC Value</label>
+                    <label className="label">MRA Value</label>
                     <input
                       type="number"
                       className="input-field"
-                      value={formData.eboc}
-                      onChange={(e) => handleInputChange('eboc', parseFloat(e.target.value) || 0)}
-                      placeholder="3000"
+                      value={formData.mra}
+                      onChange={(e) => handleInputChange('mra', parseFloat(e.target.value) || 0)}
+                      placeholder="12500"
                     />
                   </div>
                 </div>
@@ -1029,6 +1041,10 @@ function TimeshareCalculator() {
                         </div>
                         
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <strong>Cost of Liquidation:</strong>
+                          <span>${sheet.year20Cumulative.toFixed(2)}</span>
+                        </div>
+                        <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>Transfer Fees:</strong>
                           {editingDropSheet === idx ? (
                             <input
@@ -1078,11 +1094,15 @@ function TimeshareCalculator() {
                         </div>
                         <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>EBOC:</strong>
+                          <span>${sheet.eboc.toFixed(2)}</span>
+                        </div>
+                        <div className="cost-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <strong>MRA:</strong>
                           {editingDropSheet === idx ? (
                             <input
                               type="number"
-                              value={sheet.eboc}
-                              onChange={(e) => handleDropSheetEdit(idx, 'eboc', e.target.value)}
+                              value={sheet.mra}
+                              onChange={(e) => handleDropSheetEdit(idx, 'mra', e.target.value)}
                               style={{
                                 width: '100px',
                                 padding: '4px',
@@ -1092,19 +1112,8 @@ function TimeshareCalculator() {
                               }}
                             />
                           ) : (
-                            <span>${sheet.eboc.toFixed(2)}</span>
+                            <span>${sheet.mra.toFixed(2)}</span>
                           )}
-                        </div>
-                        <div className="cost-total" style={{ 
-                          paddingTop: '8px', 
-                          borderTop: '2px solid #10b981',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          display: 'flex',
-                          justifyContent: 'space-between'
-                        }}>
-                          <span>MRA:</span>
-                          <span>${sheet.mra.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
