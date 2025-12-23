@@ -278,7 +278,7 @@ function TimeshareCalculator() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(to bottom right, #4f46e5, #7c3aed, #ec4899)',
+      background: '#ffffff',
       margin: 0,
       padding: 0
     }}>
@@ -297,11 +297,10 @@ function TimeshareCalculator() {
         }
         
         .glass-card {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 24px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          border: 1px solid #e5e7eb;
         }
         
         .input-field {
@@ -486,19 +485,20 @@ function TimeshareCalculator() {
         }
         
         .step-indicator {
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(10px);
-          border-radius: 16px;
+          background: #f3f4f6;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
           padding: 8px 20px;
           font-size: 14px;
           font-weight: 600;
-          color: white;
+          color: #6b7280;
           transition: all 0.3s ease;
         }
         
         .step-indicator.active {
-          background: white;
-          color: #7c3aed;
+          background: #7c3aed;
+          color: white;
+          border-color: #7c3aed;
         }
         
         .calculation-table {
@@ -714,18 +714,16 @@ function TimeshareCalculator() {
       {/* Header */}
       <div className="no-print" style={{ 
         padding: '24px 0', 
-        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-        background: 'rgba(0, 0, 0, 0.2)',
-        backdropFilter: 'blur(10px)'
+        borderBottom: '2px solid #e5e7eb',
+        background: '#ffffff'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: '800', 
-            color: 'white', 
+            color: '#7c3aed', 
             marginBottom: '20px',
-            letterSpacing: '-0.5px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+            letterSpacing: '-0.5px'
           }}>
             Timeshare Calculator
           </h1>
