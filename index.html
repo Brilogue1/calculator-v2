@@ -205,8 +205,8 @@ function TimeshareCalculator() {
         if (['transferFees', 'processingFee', 'mra'].includes(field)) {
           // Gross Liquidation = 20-year cumulative + transfer fees + processing fee
           updated.grossLiquidation = updated.year20Cumulative + updated.transferFees + updated.processingFee;
-          // EBOC = MRA - Gross Liquidation
-          updated.eboc = updated.mra - updated.grossLiquidation;
+          // EBOC = Gross Liquidation - MRA
+          updated.eboc = updated.grossLiquidation - updated.mra;
         }
         
         return updated;
@@ -588,13 +588,14 @@ function TimeshareCalculator() {
           .comparison-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            gap: 15px !important;
+            gap: 20px !important;
             margin-bottom: 15px !important;
           }
           
           .option-box {
             font-size: 10px !important;
             line-height: 1.4 !important;
+            border-width: 2px !important;
           }
           
           .option-header {
@@ -912,30 +913,36 @@ function TimeshareCalculator() {
                 <div className="print-page" style={{ background: 'white', padding: '20px', marginBottom: '20px', borderRadius: '12px' }}>
                   
                   {/* Header */}
-                  <div className="print-header avoid-break">
+                  <div className="print-header avoid-break" style={{ marginBottom: '20px' }}>
                     <h1 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '12px', color: '#000' }}>
                       TIMESHARE LIQUIDATION ANALYSIS
                     </h1>
                     <div className="print-info-grid">
                       <div><strong>Owner:</strong> {sheet.owner}</div>
                       <div><strong>Resort:</strong> {sheet.resortName}</div>
-                      <div style={{ gridColumn: 'span 2' }}>
+                      <div style={{ gridColumn: 'span 2', marginBottom: '15px' }}>
                         <strong>Inflation Rate:</strong> {sheet.inflationRate}%
                       </div>
                     </div>
                   </div>
 
                   {/* Two Column Comparison */}
-                  <div className="comparison-grid avoid-break">
+                  <div className="comparison-grid avoid-break" style={{ gap: '20px' }}>
                     {/* Option 1: Current Contract */}
-                    <div className="option-box">
+                    <div className="option-box" style={{ 
+                      border: '3px solid #ef4444',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      background: '#fff'
+                    }}>
                       <div className="option-header" style={{ 
-                        background: '#f3f4f6', 
+                        background: '#fee2e2', 
                         padding: '12px', 
                         marginBottom: '12px',
-                        borderLeft: '4px solid #ef4444'
+                        borderLeft: '4px solid #ef4444',
+                        borderRadius: '4px'
                       }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#991b1b' }}>
                           Option 1: CURRENT CONTRACT
                         </h2>
                       </div>
@@ -988,14 +995,20 @@ function TimeshareCalculator() {
                     </div>
 
                     {/* Option 2: Liquidation */}
-                    <div className="option-box">
+                    <div className="option-box" style={{ 
+                      border: '3px solid #10b981',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      background: '#fff'
+                    }}>
                       <div className="option-header" style={{ 
-                        background: '#f3f4f6', 
+                        background: '#d1fae5', 
                         padding: '12px', 
                         marginBottom: '12px',
-                        borderLeft: '4px solid #10b981'
+                        borderLeft: '4px solid #10b981',
+                        borderRadius: '4px'
                       }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#065f46' }}>
                           Option 2: LIQUIDATION/TERMINATION
                         </h2>
                       </div>
