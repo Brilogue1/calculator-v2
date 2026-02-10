@@ -9,6 +9,8 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body style="margin:0;padding:0;">
   <div id="root"></div>
@@ -30,6 +32,7 @@ const Building2 = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 
 const DollarSign = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
 const TrendingUp = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>;
 const Download = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+const Cloud = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>;
 
 const { useState } = React;
 
@@ -231,20 +234,33 @@ function TimeshareCalculator() {
   };
 
   const downloadDropSheet = async (sheetIndex) => {
+    // Simpler approach: just use the browser's print to PDF
+    // This avoids html2canvas capturing black backgrounds
+    alert('Please use your browser\'s Print function:\n\n1. Click Print button\n2. Choose "Save as PDF" as destination\n3. Click Save\n\nThis ensures the cleanest PDF output!');
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const saveToGoogleDrive = async (sheetIndex) => {
     try {
       const element = document.getElementById(`drop-sheet-${sheetIndex}`);
       const resortName = dropSheetData[sheetIndex].resortName.replace(/\s+/g, '-');
       
-      // Use html2canvas and jsPDF
+      // Check if Google API is loaded
+      if (!window.gapi || !window.google) {
+        alert('Google Drive integration not loaded. Please refresh the page and try again.');
+        return;
+      }
+      
+      // Generate PDF blob
       if (window.html2canvas && window.jspdf) {
         const { jsPDF } = window.jspdf;
         
-        // Get all print-page elements within the drop sheet
         const pages = element.querySelectorAll('.print-page');
         const pdf = new jsPDF('p', 'pt', 'letter');
         
         for (let i = 0; i < pages.length; i++) {
-          // Create a white wrapper for clean capture
           const wrapper = document.createElement('div');
           wrapper.style.background = 'white';
           wrapper.style.padding = '40px';
@@ -268,26 +284,64 @@ function TimeshareCalculator() {
           
           const imgData = canvas.toDataURL('image/jpeg', 0.95);
           const imgWidth = 612;
-          const imgHeight = 792; // Letter height in points
+          const imgHeight = 792;
           
           if (i > 0) {
             pdf.addPage();
           }
           
-          // Center the image if it's shorter than the page
           const actualHeight = (canvas.height * imgWidth) / canvas.width;
-          const yOffset = actualHeight < imgHeight ? 0 : 0;
-          
-          pdf.addImage(imgData, 'JPEG', 0, yOffset, imgWidth, Math.min(actualHeight, imgHeight));
+          pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, Math.min(actualHeight, imgHeight));
         }
         
-        pdf.save(`${resortName}-Drop-Sheet.pdf`);
+        // Get PDF as blob
+        const pdfBlob = pdf.output('blob');
+        
+        // Upload to Google Drive
+        const fileName = `${resortName}-Drop-Sheet.pdf`;
+        
+        // Initialize Google Drive picker/upload
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: 'YOUR_GOOGLE_CLIENT_ID', // User needs to replace this
+          scope: 'https://www.googleapis.com/auth/drive.file',
+          callback: async (response) => {
+            if (response.access_token) {
+              // Upload file
+              const metadata = {
+                name: fileName,
+                mimeType: 'application/pdf'
+              };
+              
+              const form = new FormData();
+              form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+              form.append('file', pdfBlob);
+              
+              const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${response.access_token}`
+                },
+                body: form
+              });
+              
+              if (uploadResponse.ok) {
+                const result = await uploadResponse.json();
+                alert(`✅ Saved to Google Drive!\nFile: ${fileName}\nFile ID: ${result.id}`);
+              } else {
+                alert('Failed to upload to Google Drive. Please try again.');
+              }
+            }
+          }
+        });
+        
+        tokenClient.requestAccessToken();
+        
       } else {
-        alert('PDF libraries not loaded. Please use the Print button and choose "Save as PDF".');
+        alert('PDF libraries not loaded.');
       }
     } catch (error) {
-      console.error('PDF generation error:', error);
-      alert('Failed to generate PDF. Please use the Print button and choose "Save as PDF".');
+      console.error('Google Drive save error:', error);
+      alert('Failed to save to Google Drive. Please try the Download button instead.');
     }
   };
 
@@ -596,15 +650,17 @@ function TimeshareCalculator() {
             margin: 0.5in;
           }
           
-          html, body {
+          html {
+            background: white !important;
+            height: 100% !important;
+          }
+          
+          body {
             background: white !important;
             margin: 0 !important;
             padding: 0 !important;
             width: 100% !important;
             height: 100% !important;
-          }
-          
-          body {
             font-size: 11px !important;
           }
           
@@ -620,13 +676,14 @@ function TimeshareCalculator() {
             padding: 20px !important;
             margin: 0 !important;
             background: white !important;
-            min-height: auto !important;
-            height: auto !important;
+            min-height: 100vh !important;
             box-sizing: border-box !important;
+            position: relative !important;
           }
           
           .print-page:last-child {
             page-break-after: auto !important;
+            min-height: auto !important;
           }
           
           .print-page * {
@@ -1366,6 +1423,38 @@ function TimeshareCalculator() {
                       <Download size={20} />
                       Download PDF
                     </button>
+                    <button
+                      onClick={() => saveToGoogleDrive(idx)}
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '10px',
+                        background: 'linear-gradient(135deg, #4285f4 0%, #34a853 100%)',
+                        color: 'white',
+                        padding: '16px 32px',
+                        borderRadius: '16px',
+                        border: 'none',
+                        fontWeight: '700',
+                        fontSize: '15px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 16px rgba(66, 133, 244, 0.3)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(66, 133, 244, 0.4)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(66, 133, 244, 0.3)';
+                      }}
+                    >
+                      <Cloud size={20} />
+                      Save to Drive
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>
+                    💡 <strong>Note:</strong> Google Drive requires setup. See instructions below.
                   </div>
                 </div>
               </div>
@@ -1379,5 +1468,23 @@ function TimeshareCalculator() {
 
 ReactDOM.render(<TimeshareCalculator />, document.getElementById("root"));
   </script>
+  
+  <!-- Google Drive Setup Instructions -->
+  <div id="drive-setup" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:10000; padding:40px; overflow:auto;">
+    <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:16px;">
+      <h2>Google Drive Setup Required</h2>
+      <p>To enable "Save to Drive", you need to:</p>
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></li>
+        <li>Create a new project or select existing</li>
+        <li>Enable Google Drive API</li>
+        <li>Create OAuth 2.0 credentials</li>
+        <li>Add authorized JavaScript origin: <code>https://yourdomain.com</code></li>
+        <li>Copy your Client ID</li>
+        <li>Replace 'YOUR_GOOGLE_CLIENT_ID' in the code with your actual Client ID</li>
+      </ol>
+      <button onclick="document.getElementById('drive-setup').style.display='none'" style="background:#7c3aed; color:white; border:none; padding:12px 24px; border-radius:8px; cursor:pointer;">Close</button>
+    </div>
+  </div>
 </body>
 </html>
