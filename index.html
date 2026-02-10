@@ -349,7 +349,7 @@ function TimeshareCalculator() {
   const totalAnnualMaint = activeResorts.reduce((sum, r) => sum + (parseFloat(r.maintenanceFee) || 0), 0);
 
   return (
-    <div style={{
+    <div className="main-wrapper" style={{
       minHeight: '100vh',
       background: '#000000',
       margin: 0,
@@ -666,6 +666,11 @@ function TimeshareCalculator() {
           
           #root {
             background: white !important;
+          }
+          
+          .main-wrapper {
+            background: white !important;
+            min-height: 0 !important;
           }
           
           .no-print {
